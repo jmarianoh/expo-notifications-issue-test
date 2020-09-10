@@ -1,0 +1,90 @@
+name: CI
+on: [push]
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      EXPO_ANDROID_KEYSTORE_PASSWORD: keystorepassword
+      EXPO_ANDROID_KEY_PASSWORD: keypassword
+      GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+    steps:
+      -
+        name: Ensure GOOGLE_SERVICES_JSON secret is set
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then (echo "Error! the secret was not set!" 1>&2 && exit 1); else echo "Secret was set! OK."; fi
+      -
+        uses: actions/checkout@v2
+      -
+        name: Use Node 12
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      -
+        name: Use Java 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      -
+        name: Create google-services.json
+        run: |
+          echo $GOOGLE_SERVICES_JSON | base64 -d > google-services.json
+          ls -lah
+      -
+        name: Install NPM packages
+        run: |
+          npm install -g expo-cli
+          npm install
+          npm install -D turtle-cli@0.17.0
+      -
+        name: Print some versions
+        run: |
+          echo "[NODE]" && node -v
+          echo "[JAVA]" && java -version
+          echo "[EXPO]" && expo --version
+          echo "[TURTLE]" && npx turtle --version
+          echo "[CURL]" && curl --version
+          echo "[WGET]" && wget --version
+      -
+        name: Expo Diagnostics (to fill the issue template)
+        run: expo diagnostics
+      -
+        name: Expo Export
+        run: |
+          expo export --dev --public-url http://127.0.0.1:8888
+          echo [[Export done]]
+          ls -lah dist
+      -
+        name: Prepare Turtle CLI
+        run: npx turtle setup:android --sdk-version 38.0.2
+      -
+        name: Start local HTTP server
+        run: |
+          npm i -g http-server
+          (http-server -p 8888 -a 127.0.0.1 -c-1 dist &) && sleep 10 && echo Server ready
+          curl http://127.0.0.1:8888/android-index.json
+          wget -O- http://127.0.0.1:8888/android-index.json
+      -
+        name: Run Turtle CLI
+        run: npx turtle build:android --type apk --keystore-path ./dummy-keystore.jks --keystore-alias "keyalias" --allow-non-https-public-url --public-url http://127.0.0.1:8888/android-index.json -o built.apk > turtle.logs.txt
+      -
+        name: List generated files
+        run: |
+          ls -lah
+          echo "----------------------------------------------------------------------------"
+          echo "----------------------------------------------------------------------------"
+          ls -lah dist
+      -
+        name: Stop the local HTTP server
+        run: |
+          ps -aux
+          (kill -9 $(ps -aux | awk '!/awk/ {print}' | awk '/http-server/ {print $2}')) && sleep 10
+          ps -aux
+      -
+        name: Save Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-artifact
+          path: |
+            built.apk
+            turtle-logs.txt
