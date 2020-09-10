@@ -4,22 +4,26 @@ import { Text, View, Button, Clipboard } from 'react-native';
 import { debug, getDebugValue } from './src/debug';
 import { getToken } from './src/get-token';
 
-Notifications.setNotificationHandler({
-	async handleNotification(...args) {
-		debug('A', args);
-		return {
-			shouldShowAlert: true,
-			shouldPlaySound: true,
-			shouldSetBadge: true,
-		};
-	},
-	handleSuccess(...args) {
-		debug('B', args);
-	},
-	handleError(...args) {
-		debug('C', args);
-	},
-});
+try {
+	Notifications.setNotificationHandler({
+		async handleNotification(...args) {
+			debug('A', args);
+			return {
+				shouldShowAlert: true,
+				shouldPlaySound: true,
+				shouldSetBadge: true,
+			};
+		},
+		handleSuccess(...args) {
+			debug('B', args);
+		},
+		handleError(...args) {
+			debug('C', args);
+		},
+	});
+} catch (error) {
+	debug('Oops1', error);
+}
 
 export default function App() {
 	const [pushToken, setPushToken] = useState<string | undefined>(undefined);
@@ -27,45 +31,67 @@ export default function App() {
 
 	useEffect(() => {
 		debug('D');
-		void Notifications.setNotificationChannelAsync('default', {
-			name: 'default',
-			importance: Notifications.AndroidImportance.MAX,
-			vibrationPattern: [0, 250, 250, 250],
-			lightColor: '#FF231F7C',
-		});
+		(async () => {
+			try {
+				await Notifications.setNotificationChannelAsync('default', {
+					name: 'default',
+					importance: Notifications.AndroidImportance.MAX,
+					vibrationPattern: [0, 250, 250, 250],
+					lightColor: '#FF231F7C',
+				});
+				debug('D_1');
+			} catch (error) {
+				debug('D_2', error);
+			}
+		})();
 	}, []);
 
 	useEffect(() => {
-		debug('E');
-		const subscription = Notifications.addNotificationReceivedListener((notification) => {
-			debug('F', notification);
-		});
-		return () => {
-			debug('G');
-			subscription.remove();
-		};
+		try {
+			debug('E');
+			const subscription = Notifications.addNotificationReceivedListener((notification) => {
+				debug('F', notification);
+			});
+			debug('E_1');
+			return () => {
+				debug('G');
+				subscription.remove();
+			};
+		} catch (error) {
+			debug('Oops2', error);
+		}
 	}, []);
 
 	useEffect(() => {
-		debug('H');
-		const subscription = Notifications.addNotificationsDroppedListener(() => {
-			debug('I');
-		});
-		return () => {
-			debug('J');
-			subscription.remove();
-		};
+		try {
+			debug('H');
+			const subscription = Notifications.addNotificationsDroppedListener(() => {
+				debug('I');
+			});
+			debug('H_1');
+			return () => {
+				debug('J');
+				subscription.remove();
+			};
+		} catch (error) {
+			debug('Oops3', error);
+		}
 	}, []);
 
 	useEffect(() => {
-		debug('K');
-		const subscription = Notifications.addNotificationResponseReceivedListener((arg) => {
-			debug('L', arg);
-		});
-		return () => {
-			debug('M');
-			subscription.remove();
-		};
+		try {
+			debug('K');
+			const subscription = Notifications.addNotificationResponseReceivedListener((arg) => {
+				debug('L', arg);
+			});
+			debug('K_1');
+			return () => {
+				debug('M');
+				subscription.remove();
+			};
+		} catch (error) {
+			debug('Oops4', error);
+		}
 	}, []);
 
 	return (
