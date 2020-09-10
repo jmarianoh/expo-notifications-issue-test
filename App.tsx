@@ -1,71 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import * as Notifications from 'expo-notifications';
-import { Text, View, Button, Clipboard } from 'react-native';
+import { Notifications } from 'expo';
+import { Text, View, Button, Clipboard, Vibration } from 'react-native';
 import { debug, getDebugValue } from './src/debug';
 import { getToken } from './src/get-token';
-
-Notifications.setNotificationHandler({
-	async handleNotification(...args) {
-		debug('A', args);
-		return {
-			shouldShowAlert: true,
-			shouldPlaySound: true,
-			shouldSetBadge: true,
-		};
-	},
-	handleSuccess(...args) {
-		debug('B', args);
-	},
-	handleError(...args) {
-		debug('C', args);
-	},
-});
 
 export default function App() {
 	const [pushToken, setPushToken] = useState<string | undefined>(undefined);
 	const [debugValue, setDebugValue] = useState('[Nothing debugged yet]');
 
 	useEffect(() => {
-		debug('D');
-		void Notifications.setNotificationChannelAsync('default', {
-			name: 'default',
-			importance: Notifications.AndroidImportance.MAX,
-			vibrationPattern: [0, 250, 250, 250],
-			lightColor: '#FF231F7C',
-		});
+		debug('A');
+		(async () => {
+			try {
+				await Notifications.createChannelAndroidAsync('default', {
+					name: 'default',
+					sound: true,
+					priority: 'max',
+					vibrate: [0, 250, 250, 250]
+				});
+			} catch (error) {
+				debug('B', error);
+			}
+		})();
 	}, []);
 
 	useEffect(() => {
-		debug('E');
-		const subscription = Notifications.addNotificationReceivedListener((notification) => {
-			debug('F', notification);
-		});
-		return () => {
-			debug('G');
-			subscription.remove();
-		};
-	}, []);
-
-	useEffect(() => {
-		debug('H');
-		const subscription = Notifications.addNotificationsDroppedListener(() => {
-			debug('I');
-		});
-		return () => {
-			debug('J');
-			subscription.remove();
-		};
-	}, []);
-
-	useEffect(() => {
-		debug('K');
-		const subscription = Notifications.addNotificationResponseReceivedListener((arg) => {
-			debug('L', arg);
-		});
-		return () => {
-			debug('M');
-			subscription.remove();
-		};
+		debug('C');
+		try {
+			const subscription = Notifications.addListener((notification) => {
+				debug('D', notification);
+				Vibration.vibrate();
+			});
+			return () => {
+				debug('E');
+				subscription.remove();
+			};
+		} catch (error) {
+			debug('F', error);
+		}
 	}, []);
 
 	return (
@@ -91,7 +63,7 @@ export default function App() {
 						try {
 							setPushToken(await getToken());
 						} catch (error) {
-							debug('N', error);
+							debug('G', error);
 						}
 					}}
 				/>

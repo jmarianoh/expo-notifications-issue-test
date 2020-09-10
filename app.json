@@ -21,8 +21,7 @@
     },
     "android": {
       "package": "papb.test.expo_notifications_issue",
-      "googleServicesFile": "./google-services.json",
-      "useNextNotificationsApi": true
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"

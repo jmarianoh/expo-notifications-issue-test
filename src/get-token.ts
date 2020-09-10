@@ -1,15 +1,13 @@
-import * as Notifications from 'expo-notifications';
+import { Notifications } from 'expo';
 import * as Permissions from 'expo-permissions';
 import Constants from 'expo-constants';
+import { debug } from './debug';
 
 export async function getToken(): Promise<string | undefined> {
 	if (!Constants.isDevice) throw new Error('Not a device!');
 
-	try {
-		return (await Notifications.getDevicePushTokenAsync())?.data;
-	} catch {
-		const { status } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
-		if (status !== 'granted') await Permissions.askAsync(Permissions.NOTIFICATIONS);
-		return (await Notifications.getDevicePushTokenAsync())?.data;
-	}
+	const { status } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
+	debug('Status for Permissions.NOTIFICATIONS: ' + status);
+	if (status !== 'granted') await Permissions.askAsync(Permissions.NOTIFICATIONS);
+	return (await Notifications.getDevicePushTokenAsync())?.data;
 }
