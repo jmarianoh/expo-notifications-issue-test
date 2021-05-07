@@ -1,6 +1,6 @@
 ## 🐛 Bug Report
 
-### Summary of Issue <!-- (just a few sentences) -->
+### Summary of Issue <!-- ( just a few sentences ) -->
 
 * Listeners are not triggered
   * `handleNotification` within `Notifications.setNotificationHandler` is never called
